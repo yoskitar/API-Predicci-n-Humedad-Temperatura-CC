@@ -1,0 +1,9 @@
+falcon
+gunicorn
+pymongo
+invoke
+numpy
+gevent
+dnspython
+python-dotenv
+falcon_cors
