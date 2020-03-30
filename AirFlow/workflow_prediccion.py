@@ -31,7 +31,7 @@ default_args = {
 
 #Inicialización del grafo DAG de tareas para el flujo de trabajo
 dag = DAG(
-    'practica2_prediccion_temp_hum37',
+    'practica2_prediccion_temp_hum656',
     default_args=default_args,
     description='Orquestación del servicio de prediccion',
     schedule_interval=timedelta(days=1),
@@ -92,7 +92,7 @@ ComponerDatos = PythonOperator(
 ConstruirDBContainer = BashOperator(
     task_id='ConstruirDBContainer',
     depends_on_past=True,
-    bash_command='docker build -t mongodb_container .',
+    bash_command='docker build -f /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/mongodb.dockerfile -t mongodb_container .',
     dag=dag,
 )
 
