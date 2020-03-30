@@ -17,4 +17,4 @@ EXPOSE 27017
 #package.json de nuestro microservicio, encargado de 
 #iniciar el microservicio. Esta acción se ejecutará
 #automáticamente al ejecutar el contenedor.
-CMD ["mongod"]
+CMD mongod ; mongoimport --db PredictionsDB --collection predictions --headerline --file /usr/datos/data.csv --type csv
