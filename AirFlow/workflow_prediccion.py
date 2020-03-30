@@ -19,7 +19,7 @@ default_args = {
     # 'wait_for_downstream': False,
     # 'dag': dag,
     # 'sla': timedelta(hours=2),
-    # 'execution_timeout': timedelta(seconds=300),
+    'execution_timeout': timedelta(seconds=1500),
     # 'on_failure_callback': some_function,
     # 'on_success_callback': some_other_function,
     # 'on_retry_callback': another_function,
@@ -39,30 +39,37 @@ dag = DAG(
 PrepararEntorno = BashOperator(
     task_id='PrepararEntorno',
     depends_on_past=False,
-    bash_command='mkdir -p tmp/workflow/data/ ',
+    bash_command='mkdir -p /tmp/workflow/data/',
     dag=dag,
 )
 
 DescargaApi = BashOperator(
-    task_id='PrepararEntorno',
-    depends_on_past=False,
-    bash_command='cd tmp/workflow/ && https://github.com/yoskitar/API-Prediccion-Humedad-Temperatura-CC/API',
+    task_id='DescargaApi',
+    depends_on_past=True,
+    bash_command='wget -O /tmp/workflow/master.zip https://github.com/yoskitar/API-Prediccion-Humedad-Temperatura-CC/archive/master.zip',
     dag=dag,
 )
 
 DescargaDatosHumedad = BashOperator(
-    task_id='DescargaTemperatura',
-    depends_on_past=False,
-    bash_command='cd tmp/workflow/data/ && wget https://github.com/manuparra/MaterialCC2020/raw/master/humidity.csv.zip',
+    task_id='DescargaHumedad',
+    depends_on_past=True,
+    bash_command='wget -O /tmp/workflow/data/humidity.csv.zip https://github.com/manuparra/MaterialCC2020/raw/master/humidity.csv.zip',
     dag=dag,
 )
 
 DescargaDatosTemperatura = BashOperator(
-    task_id='DescargaHumedad',
-    depends_on_past=False,
-    bash_command='cd tmp/workflow/data/ && wget https://github.com/manuparra/MaterialCC2020/raw/master/temperature.csv.zip',
+    task_id='DescargaTemperatura',
+    depends_on_past=True,
+    bash_command='wget -O /tmp/workflow/data/temperature.csv.zip https://github.com/manuparra/MaterialCC2020/raw/master/temperature.csv.zip',
+    dag=dag,
+)
+
+Descomprimir = BashOperator(
+    task_id='Descomprimir',
+    depends_on_past=True,
+    bash_command='unzip /tmp/workflow/master.zip -d /tmp/workflow/ & unzip /tmp/workflow/data/temperature.csv.zip -d /tmp/workflow/data/ & unzip /tmp/workflow/data/humidity.csv.zip -d /tmp/workflow/data/',
     dag=dag,
 )
 
 #Dependencias - Construcción del grafo DAG
-[DescargaApi,PrepararEntorno] >> [DescargaDatosTemperatura,DescargaDatosHumedad]
+PrepararEntorno >> [DescargaApi,DescargaDatosTemperatura,DescargaDatosHumedad] >> Descomprimir
