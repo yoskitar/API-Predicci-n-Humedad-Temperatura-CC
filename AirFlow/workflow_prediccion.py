@@ -1,7 +1,9 @@
 from datetime import timedelta
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
+from airflow.operators.python_operator import PythonOperator
 from airflow.utils.dates import days_ago
+import pandas as pd
 
 default_args = {
     'owner': 'airflow',
@@ -29,47 +31,77 @@ default_args = {
 
 #Inicialización del grafo DAG de tareas para el flujo de trabajo
 dag = DAG(
-    'practica2_prediccion_temp_hum',
+    'practica2_prediccion_temp_hum37',
     default_args=default_args,
     description='Orquestación del servicio de prediccion',
     schedule_interval=timedelta(days=1),
 )
 
+def componerDatos():
+    df_temp = pd.read_csv("/tmp/datos/temperature.csv", sep=",")
+    df_hum = pd.read_csv("/tmp/datos/humidity.csv", sep=",")
+    temp = df_temp[['datetime', 'San Francisco']]
+    hum = df_hum[['datetime', 'San Francisco']]
+    data = pd.merge(temp, hum, on='datetime')
+    data.to_csv('/tmp/datos/data.csv', index=False, header=False, sep=';', decimal='.')
+    print(data.head(5))
+
 # Operadores o tareas
 PrepararEntorno = BashOperator(
     task_id='PrepararEntorno',
     depends_on_past=False,
-    bash_command='mkdir -p /tmp/workflow/data/',
+    bash_command='mkdir -p /tmp/datos/',
     dag=dag,
 )
 
 DescargaApi = BashOperator(
     task_id='DescargaApi',
     depends_on_past=True,
-    bash_command='wget -O /tmp/workflow/master.zip https://github.com/yoskitar/API-Prediccion-Humedad-Temperatura-CC/archive/master.zip',
+    bash_command='wget -O /tmp/master.zip https://github.com/yoskitar/API-Prediccion-Humedad-Temperatura-CC/archive/master.zip',
     dag=dag,
 )
 
 DescargaDatosHumedad = BashOperator(
     task_id='DescargaHumedad',
     depends_on_past=True,
-    bash_command='wget -O /tmp/workflow/data/humidity.csv.zip https://github.com/manuparra/MaterialCC2020/raw/master/humidity.csv.zip',
+    bash_command='wget -O /tmp/datos/humidity.csv.zip https://github.com/manuparra/MaterialCC2020/raw/master/humidity.csv.zip',
     dag=dag,
 )
 
 DescargaDatosTemperatura = BashOperator(
     task_id='DescargaTemperatura',
     depends_on_past=True,
-    bash_command='wget -O /tmp/workflow/data/temperature.csv.zip https://github.com/manuparra/MaterialCC2020/raw/master/temperature.csv.zip',
+    bash_command='wget -O /tmp/datos/temperature.csv.zip https://github.com/manuparra/MaterialCC2020/raw/master/temperature.csv.zip',
     dag=dag,
 )
 
 Descomprimir = BashOperator(
     task_id='Descomprimir',
     depends_on_past=True,
-    bash_command='unzip /tmp/workflow/master.zip -d /tmp/workflow/ & unzip /tmp/workflow/data/temperature.csv.zip -d /tmp/workflow/data/ & unzip /tmp/workflow/data/humidity.csv.zip -d /tmp/workflow/data/',
+    bash_command='unzip -o /tmp/master.zip -d /tmp & unzip -o /tmp/datos/temperature.csv.zip -d /tmp/datos & unzip -o /tmp/datos/humidity.csv.zip -d /tmp/datos',
+    dag=dag,
+)
+
+ComponerDatos = PythonOperator(
+    task_id='ComponerDatos',
+    depends_on_past=True,
+    python_callable=componerDatos,
+    dag=dag,
+)
+
+ConstruirDBContainer = BashOperator(
+    task_id='ConstruirDBContainer',
+    depends_on_past=True,
+    bash_command='docker build -t mongodb_container .',
+    dag=dag,
+)
+
+LanzarDBContainer = BashOperator(
+    task_id='LanzarDBContainer',
+    depends_on_past=True,
+    bash_command='docker run -it -p 27017:27017 mongodb_container:latest',
     dag=dag,
 )
 
 #Dependencias - Construcción del grafo DAG
-PrepararEntorno >> [DescargaApi,DescargaDatosTemperatura,DescargaDatosHumedad] >> Descomprimir
+PrepararEntorno >> [DescargaApi,DescargaDatosTemperatura,DescargaDatosHumedad] >> Descomprimir >> ComponerDatos >> ConstruirDBContainer >> LanzarDBContainer
