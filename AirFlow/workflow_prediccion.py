@@ -43,7 +43,7 @@ def componerDatos():
     temp = df_temp[['datetime', 'San Francisco']]
     hum = df_hum[['datetime', 'San Francisco']]
     data = pd.merge(temp, hum, on='datetime')
-    data.to_csv('/tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/datos/data.csv', index=False, header=False, sep=';', decimal='.')
+    data.to_csv('/tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/data.csv', index=False, header=False, sep=';', decimal='.')
     print(data.head(5))
 
 # Operadores o tareas
