@@ -31,7 +31,7 @@ default_args = {
 
 #Inicialización del grafo DAG de tareas para el flujo de trabajo
 dag = DAG(
-    'practica2_prediccion_temp_hum851',
+    'practica2_prediccion_temp_hum111',
     default_args=default_args,
     description='Orquestación del servicio de prediccion',
     schedule_interval=timedelta(days=1),
@@ -43,7 +43,7 @@ def componerDatos():
     temp = df_temp[['datetime', 'San Francisco']]
     hum = df_hum[['datetime', 'San Francisco']]
     data = pd.merge(temp, hum, on='datetime')
-    data.to_csv('/tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/data.csv', index=False, header=False, sep=';', decimal='.')
+    data.to_csv('/tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/data.csv', index=False, header=True, sep=';', decimal='.')
     print(data.head(5))
 
 # Operadores o tareas
@@ -92,7 +92,7 @@ ComponerDatos = PythonOperator(
 ConstruirDBContainer = BashOperator(
     task_id='ConstruirDBContainer',
     depends_on_past=True,
-    bash_command='docker build -f /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/mongodb.dockerfile -t mongodb_container .',
+    bash_command='cd /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/ && docker build -f ./mongodb.dockerfile -t mongodb_container .',
     dag=dag,
 )
 
