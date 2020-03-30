@@ -7,7 +7,7 @@ FROM mongo:latest
 LABEL maintainer="osc9718@gmail.com"
 #Establecemos el directorio de trabajo.
 WORKDIR /usr/
-COPY ../datos/data.csv datos/
+COPY datos/data.csv datos/
 #Iniciamos mongodb en el contenedor
 #Indicamos a modo informativo el puerto interno
 #de nuestro microservicio. 
