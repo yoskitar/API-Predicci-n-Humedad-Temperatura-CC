@@ -4,16 +4,17 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.utils.dates import days_ago
 import pandas as pd
+import datetime
 
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': days_ago(2),
+    'start_date': days_ago(1),
     'email': ['osc9718@gmail.com'],
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
-    'retry_delay': timedelta(minutes=1),
+    'retry_delay': timedelta(minutes=10),
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
     # 'priority_weight': 10,
@@ -21,7 +22,7 @@ default_args = {
     # 'wait_for_downstream': False,
     # 'dag': dag,
     # 'sla': timedelta(hours=2),
-    'execution_timeout': timedelta(seconds=1500),
+    # 'execution_timeout': timedelta(seconds=4500),
     # 'on_failure_callback': some_function,
     # 'on_success_callback': some_other_function,
     # 'on_retry_callback': another_function,
@@ -31,7 +32,7 @@ default_args = {
 
 #Inicialización del grafo DAG de tareas para el flujo de trabajo
 dag = DAG(
-    'practica2_prediccion_temp_hum111',
+    'practica2_prediccion_temp_hum333',
     default_args=default_args,
     description='Orquestación del servicio de prediccion',
     schedule_interval=timedelta(days=1),
@@ -92,16 +93,23 @@ ComponerDatos = PythonOperator(
 ConstruirDBContainer = BashOperator(
     task_id='ConstruirDBContainer',
     depends_on_past=True,
-    bash_command='cd /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/ && docker build -f ./mongodb.dockerfile -t mongodb_container .',
+    bash_command='cd /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/ && docker build -f ./mongodb.dockerfile -t mongodb_container_prediction .',
     dag=dag,
 )
 
 LanzarDBContainer = BashOperator(
     task_id='LanzarDBContainer',
     depends_on_past=True,
-    bash_command='docker run -it -p 27017:27017 mongodb_container:latest',
+    bash_command='docker run --rm -d -p 27017:27017 --name db_mongo_container mongodb_container_prediction:latest',
+    dag=dag,
+)
+
+IntegrarDatosDB = BashOperator(
+    task_id='IntegrarDatosDB',
+    depends_on_past=True,
+    bash_command='docker exec db_mongo_container mongoimport --db PredictionsDB --collection predictions --headerline --file /usr/datos/data.csv --type csv',
     dag=dag,
 )
 
 #Dependencias - Construcción del grafo DAG
-PrepararEntorno >> [DescargaApi,DescargaDatosTemperatura,DescargaDatosHumedad] >> Descomprimir >> ComponerDatos >> ConstruirDBContainer >> LanzarDBContainer
+PrepararEntorno >> [DescargaApi,DescargaDatosTemperatura,DescargaDatosHumedad] >> Descomprimir >> ComponerDatos >> ConstruirDBContainer >> LanzarDBContainer >> IntegrarDatosDB
