@@ -9,4 +9,3 @@ python-dotenv
 falcon_cors
 pmdarima
 pandas
-statsmodels

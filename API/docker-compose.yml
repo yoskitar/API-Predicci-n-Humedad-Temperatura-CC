@@ -23,7 +23,7 @@ services:
         container_name: "mongodb_container" 
         ports:
             - 27017:27017
-
+    
     mongodb_seed_container:
         build:
             context: ./

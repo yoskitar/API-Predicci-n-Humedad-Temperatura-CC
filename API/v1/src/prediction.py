@@ -2,7 +2,6 @@
 import falcon
 import json
 import sys
-from statsmodels.tsa.arima_model import ARIMA
 import pandas as pd
 import pmdarima as pm
 from falcon_cors import CORS
