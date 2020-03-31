@@ -1,6 +1,6 @@
 #Imagen y versión que usaremos de base para la 
 #construcción del contenedor.
-FROM python:3.7-alpine
+FROM python:3.7
 #Indicamos a modo informativo, el responsable encargado de 
 #mantener el repositorio, con la etiqueta LABEL, ya que 
 #MAINTAINER se encuentra [deprecated]
