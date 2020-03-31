@@ -7,7 +7,6 @@ FROM python:3.7
 LABEL maintainer="osc9718@gmail.com"
 #Establecemos el directorio de trabajo.
 WORKDIR /usr/
-RUN apk add --no-cache gcc musl-dev linux-headers
 #Copiamos el requirements.txt donde 
 #hemos especificado las dependencias de nuestro microservicio.
 COPY requirements.txt ./
