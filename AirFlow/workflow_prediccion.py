@@ -90,6 +90,7 @@ ComponerDatos = PythonOperator(
     dag=dag,
 )
 
+"""
 ConstruirDBContainer = BashOperator(
     task_id='ConstruirDBContainer',
     depends_on_past=True,
@@ -110,6 +111,14 @@ IntegrarDatosDB = BashOperator(
     bash_command='docker exec db_mongo_container mongoimport --db PredictionsDB --collection predictions --headerline --file /usr/datos/data.csv --type csv',
     dag=dag,
 )
+"""
+
+LanzarDBContainer = BashOperator(
+    task_id='LanzarDBContainer',
+    depends_on_past=True,
+    bash_command='cd /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/ && docker-compose up --build -d',
+    dag=dag,
+)
 
 #Dependencias - Construcción del grafo DAG
-PrepararEntorno >> [DescargaApi,DescargaDatosTemperatura,DescargaDatosHumedad] >> Descomprimir >> ComponerDatos >> ConstruirDBContainer >> LanzarDBContainer >> IntegrarDatosDB
+PrepararEntorno >> [DescargaApi,DescargaDatosTemperatura,DescargaDatosHumedad] >> Descomprimir >> ComponerDatos >> LanzarDBContainer
