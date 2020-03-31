@@ -2,6 +2,9 @@
 import falcon
 import json
 import sys
+from statsmodels.tsa.arima_model import ARIMA
+import pandas as pd
+import pmdarima as pm
 from falcon_cors import CORS
 from bson import ObjectId
 from falcon import HTTP_400, HTTP_501, HTTP_404
@@ -37,40 +40,65 @@ class Prediction(object):
         #Discriminamos el método indicado como parámetro
         #para realizar el get atendiendo al atributo deseado
         #del documento.
-        if(method == 'all'):
-            res = self.dbManager.get()
-        elif(method == 'byId'):
-            res = self.dbManager.get(param='film_id', value=paramValue)
-        elif(method == 'films'):
-            res = self.dbManager.get(param='films', value=paramValue)
+        n_periods = 0
+        if(method == '24hours'):
+            n_periods = 24
+        elif(method == '48hours'):
+            n_periods = 48
+        elif(method == '72hours'):
+            n_periods = 72
         #Manejar error en cado de llamar a un método no definido
         else:
             res['status'] = HTTP_501 #Método no implementado
             res['msg'] = 'Error: method not implemented'
+            return res
+
+        res = self.getPrediction(n_periods)
         #Devolvemos la respuesta
         return res
 
-    def post(self, data):
+
+    def getPrediction(self, nperiods):
         #Estrutura de respuesta por defecto
         res = {
             "status": HTTP_400, #Bad request
             "data": None,
             "msg": "Default"
         }
-        #Comprobamos si el json recibido esta bien formado
-        if ('name' in data and 'ingredients' in data):
-            ingredientsValue = data['ingredients']
-            if(isinstance(ingredientsValue,list)):
-                #Creamos un objeto diccionario con la estructura adecuada
-                #para insertarlo como documento en la colección.
-                newReceipe = dict(name=data['name'], ingredients=ingredientsValue)
-                res = self.dbManager.insert(newReceipe)
-            #Gestión de error de tipo incorrecto
-            else:
-                res['msg'] = "Invalid query params type"
-        #Gestión de error de request mal formada
-        else:
-            res['msg'] = "Invalid query params"
+        #Obtener datos de temperatura y humedad de la BD
+        res = self.dbManager.get()
+        #Convertir datos a dataframe
+        df = pd.DataFrame(data=res['data'])
+        
+        predictionsTemperature = self.predict(nperiods, df.temperature)
+        predictionsHumidity = self.predict(nperiods, df.humidity)
+        
+        return res
+
+    def predict(self, df, n_periods_param):
+        model = pm.auto_arima(df.sanfrancisco, start_p=1, start_q=1,
+                      test='adf',       # use adftest to find optimal 'd'
+                      max_p=3, max_q=3, # maximum p and q
+                      m=1,              # frequency of series
+                      d=None,           # let model determine 'd'
+                      seasonal=False,   # No Seasonality
+                      start_P=0, 
+                      D=0, 
+                      trace=True,
+                      error_action='ignore',  
+                      suppress_warnings=True, 
+                      stepwise=True)
+        # Forecast
+        fc, confint = model.predict(n_periods=n_periods_param, return_conf_int=True)
+        return fc
+
+    def post(self, data):
+        #Estrutura de respuesta por defecto
+        res = {
+            "status": HTTP_501, #Bad request
+            "data": None,
+            "msg": "Error: method POST not implemented"
+        }
         #Devolvemos la respuesta
         return res
 
@@ -78,10 +106,9 @@ class Prediction(object):
     #get sobre el el recurso para el API.
     def on_get(self, req, resp):
         #Obtenemos los parámetros como queryParams en el URL
-        methodParam = req.params['method'] or ""
-        valueParam = req.params['value'] or ""
+        methodParam = req.params['hours'] or ""
         #Procesamos la petición
-        res = self.get(method=methodParam, paramValue=valueParam)
+        res = self.get(method=methodParam)
         #Establecemos la respuesta
         resp.status = res['status']
         resp.body = JSONEncoder().encode(res['data'])

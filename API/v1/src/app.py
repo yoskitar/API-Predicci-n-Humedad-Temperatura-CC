@@ -20,7 +20,7 @@ dbPredictionsManager = DbManager(os.getenv("DB_Predictions"),'PredictionsDB','pr
 predictions = Prediction(dbPredictionsManager)
 #Definimos la ruta 'receipes', sobre la que se ejecutarán los request
 #definidos en el recurso de la clase 'Receipe' creado.
-api.add_route('/servicio', predictions)
+api.add_route('/servicio/v1/:hours', predictions)
 
 
 
