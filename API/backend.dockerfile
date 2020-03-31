@@ -18,7 +18,7 @@ RUN pip install -r requirements.txt
 #El segundo argumento hace referencia a la dirección donde se copiará
 #el contenido. Si se usa el punto, estamos indicando que se escoja
 #la ruta definida en el WORKDIR.
-COPY src/ src/
+COPY v1/src/ src/
 #Iniciamos mongodb en el contenedor
 #Indicamos a modo informativo el puerto interno
 #de nuestro microservicio. 

@@ -30,11 +30,11 @@ class Prediction(object):
         cors = CORS(allow_all_origins=True)
         
     #Método para procesar un petición Get.
-    def get(self, method, paramValue):
+    def get(self, method):
         #Estrutura de respuesta por defecto
         res = {
             "status": HTTP_400, #Bad request
-            "data": None,
+            "data": method,
             "msg": "Default"
         }
         #Discriminamos el método indicado como parámetro
@@ -69,14 +69,15 @@ class Prediction(object):
         res = self.dbManager.get()
         #Convertir datos a dataframe
         df = pd.DataFrame(data=res['data'])
-        
-        predictionsTemperature = self.predict(nperiods, df.temperature)
-        predictionsHumidity = self.predict(nperiods, df.humidity)
-        
+        #Predicciones 
+        predictionsTemperature = self.predict(df.temperature, nperiods)
+        predictionsHumidity = self.predict(df.humidity, nperiods)
+        res['data'] = predictionsTemperature
+
         return res
 
-    def predict(self, df, n_periods_param):
-        model = pm.auto_arima(df.sanfrancisco, start_p=1, start_q=1,
+    def predict(self, df_column, n_periods_param):
+        model = pm.auto_arima(df_column, start_p=1, start_q=1,
                       test='adf',       # use adftest to find optimal 'd'
                       max_p=3, max_q=3, # maximum p and q
                       m=1,              # frequency of series
