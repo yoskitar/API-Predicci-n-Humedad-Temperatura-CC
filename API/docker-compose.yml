@@ -1,26 +1,22 @@
 version: '3.7'
-volumes:
-    mongodb_data_container:
+
 services:
-    predictions_backend:
+    mongodb_container:
         build:
             context: ./
-            dockerfile: backend.dockerfile
-        container_name: "predictions_backend"
-        environment:
-            - PORT=3000
-            - DB_Predictions=mongodb://mongodb_container:27017/
+            dockerfile: mongodb.dockerfile
+        container_name: "mongodb_container" 
         ports:
-            - 3000:3000
+            - 27017:27017
+
+    mongodb_seed_container:
+        build:
+            context: ./
+            dockerfile: mongodb_seed.dockerfile
+        container_name: "mongodb_seed_container"
+        ports:
+            - 13000:3000
         links:
             - mongodb_container
         depends_on:
             - mongodb_container
-
-    mongodb_container:
-        image: mongo:latest
-        container_name: "mongodb_container"
-        ports:
-            - 27017:27017
-        volumes:
-            - mongodb_data_container:/data/db
