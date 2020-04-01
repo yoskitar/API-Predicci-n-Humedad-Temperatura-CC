@@ -73,7 +73,7 @@ class Prediction(object):
         #Convertir datos a dataframe
         df = pd.DataFrame(data=res['data'])
         #Predicciones 
-        predictionsTemperature = self.predict(df.temperature, nperiods)
+        predictionsTemperature = self.predict(df['temperature'].astype(float), nperiods)
         #predictionsHumidity = self.predict(df.humidity, nperiods)
         res['data'] = self.get_json(nperiods, predictionsTemperature)
 
@@ -92,6 +92,7 @@ class Prediction(object):
         return json.loads(s)
 
     def predict(self, df_column, n_periods_param):
+        print(df_column)
         model = pm.auto_arima(df_column, start_p=1, start_q=1,
                       test='adf',       # use adftest to find optimal 'd'
                       max_p=3, max_q=3, # maximum p and q
