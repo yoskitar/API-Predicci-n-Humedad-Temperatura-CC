@@ -77,11 +77,22 @@ class Prediction(object):
         #Convertir datos a dataframe
         df = pd.DataFrame(data=res['data'])
         #Predicciones 
-        predictionsTemperature = self.predict_type(df.humidity, nperiods)
+        predictionsTemperature = self.predict_type(df['humidity'], nperiods)
         #predictionsHumidity = self.predict(df.humidity, nperiods)
         res['data'] = self.get_json(nperiods, predictionsTemperature)
 
         return res
+
+    def predict_type(self, df_column, n_periods_param):
+        logging.warning('df_column')
+        logging.warning(df_column)
+        logging.warning('termina')
+        model = pm.auto_arima(df_column, start_p=1, start_q=1, test='adf', max_p=3, max_q=3, m=1, d=None, seasonal=False, start_P=0, D=0,trace=True, error_action='ignore', suppress_warnings=True, stepwise=True)
+        logging.warning('auto')
+        # Forecast
+        fc, confint = model.predict(n_periods=n_periods_param, return_conf_int=True)
+        logging.warning('peta')
+        return fc
 
     def get_json(self, n_periods, fc_T):
         logging.warning('json')
@@ -95,14 +106,6 @@ class Prediction(object):
             if i != n_periods-1: s+=","
         s += ']}'
         return json.loads(s)
-
-    def predict_type(self, df_column, n_periods_param):
-        logging.warning('df_column')
-        logging.warning(df_column)
-        model = pm.auto_arima(df_column, start_p=1, start_q=1, test='adf', max_p=3, max_q=3, m=1, d=None, seasonal=False, start_P=0, D=0,trace=True, error_action='ignore', suppress_warnings=True, stepwise=True)
-        # Forecast
-        fc, confint = model.predict(n_periods=n_periods_param, return_conf_int=True)
-        return fc
 
     def post(self, data):
         #Estrutura de respuesta por defecto
