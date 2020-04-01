@@ -4,6 +4,7 @@ import json
 import sys
 import logging
 import pandas as pd
+import numpy as np
 import pmdarima as pm
 from statsmodels.tsa.arima_model import ARIMA
 from falcon_cors import CORS
@@ -82,6 +83,7 @@ class Prediction(object):
         return res
 
     def predict(self, df_column, n_periods_param):
+        df_column = np.split(df_column,24)
         model = pm.auto_arima(df_column, start_p=1, start_q=1, test='adf', max_p=3, max_q=3, m=1, d=None, seasonal=False, start_P=0, D=0,trace=True, error_action='ignore', suppress_warnings=True, stepwise=True)
         # Forecast
         fc, confint = model.predict(n_periods=n_periods_param, return_conf_int=True)
