@@ -35,6 +35,7 @@ class Prediction(object):
         
     #Método para procesar un petición Get.
     def get(self, method):
+        logging.warning('entra a get principal')
         #Estrutura de respuesta por defecto
         res = {
             "status": HTTP_400, #Bad request
@@ -64,7 +65,7 @@ class Prediction(object):
 
 
     def getPrediction(self, nperiods):
-        logging.debug('entra')
+        logging.warning('entra')
         #Estrutura de respuesta por defecto
         res = {
             "status": HTTP_200, #Bad request
@@ -76,14 +77,14 @@ class Prediction(object):
         #Convertir datos a dataframe
         df = pd.DataFrame(data=res['data'])
         #Predicciones 
-        predictionsTemperature = self.predict(df.humidity, nperiods)
+        predictionsTemperature = self.predict_type(df.humidity, nperiods)
         #predictionsHumidity = self.predict(df.humidity, nperiods)
         res['data'] = self.get_json(nperiods, predictionsTemperature)
 
         return res
 
     def get_json(self, n_periods, fc_T):
-        logging.debug('json')
+        logging.warning('json')
         hours = ["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00",
         "11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00",
         "23:00"]
@@ -95,21 +96,10 @@ class Prediction(object):
         s += ']}'
         return json.loads(s)
 
-    def predict(self, df_column, n_periods_param):
-        logging.debug('df_column')
-        logging.debug(df_column)
-        model = pm.auto_arima(df_column, start_p=1, start_q=1,
-                      test='adf',       # use adftest to find optimal 'd'
-                      max_p=3, max_q=3, # maximum p and q
-                      m=1,              # frequency of series
-                      d=None,           # let model determine 'd'
-                      seasonal=False,   # No Seasonality
-                      start_P=0, 
-                      D=0, 
-                      trace=True,
-                      error_action='ignore',  
-                      suppress_warnings=True, 
-                      stepwise=True)
+    def predict_type(self, df_column, n_periods_param):
+        logging.warning('df_column')
+        logging.warning(df_column)
+        model = pm.auto_arima(df_column, start_p=1, start_q=1, test='adf', max_p=3, max_q=3, m=1, d=None, seasonal=False, start_P=0, D=0,trace=True, error_action='ignore', suppress_warnings=True, stepwise=True)
         # Forecast
         fc, confint = model.predict(n_periods=n_periods_param, return_conf_int=True)
         return fc
