@@ -1,3 +1,4 @@
+logging
 falcon
 gunicorn
 pymongo
@@ -9,4 +10,3 @@ python-dotenv
 falcon_cors
 pmdarima
 pandas
-logging
