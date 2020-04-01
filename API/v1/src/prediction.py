@@ -2,8 +2,10 @@
 import falcon
 import json
 import sys
+import logging
 import pandas as pd
 import pmdarima as pm
+from statsmodels.tsa.arima_model import ARIMA
 from falcon_cors import CORS
 from bson import ObjectId
 from falcon import HTTP_400, HTTP_501, HTTP_404, HTTP_200
@@ -55,13 +57,14 @@ class Prediction(object):
             res['status'] = HTTP_501 #Método no implementado
             res['msg'] = 'Error: method not implemented'
             return res
-
+        
         res = self.getPrediction(n_periods)
         #Devolvemos la respuesta
         return res
 
 
     def getPrediction(self, nperiods):
+        logging.debug('entra')
         #Estrutura de respuesta por defecto
         res = {
             "status": HTTP_200, #Bad request
@@ -80,6 +83,7 @@ class Prediction(object):
         return res
 
     def get_json(self, n_periods, fc_T):
+        logging.debug('json')
         hours = ["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00",
         "11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00",
         "23:00"]
@@ -92,7 +96,8 @@ class Prediction(object):
         return json.loads(s)
 
     def predict(self, df_column, n_periods_param):
-        print(df_column)
+        logging.debug('df_column')
+        logging.debug(df_column)
         model = pm.auto_arima(df_column, start_p=1, start_q=1,
                       test='adf',       # use adftest to find optimal 'd'
                       max_p=3, max_q=3, # maximum p and q
