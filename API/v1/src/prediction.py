@@ -6,7 +6,7 @@ import pandas as pd
 import pmdarima as pm
 from falcon_cors import CORS
 from bson import ObjectId
-from falcon import HTTP_400, HTTP_501, HTTP_404
+from falcon import HTTP_400, HTTP_501, HTTP_404, HTTP_200
 
 
 
@@ -64,7 +64,7 @@ class Prediction(object):
     def getPrediction(self, nperiods):
         #Estrutura de respuesta por defecto
         res = {
-            "status": HTTP_400, #Bad request
+            "status": HTTP_200, #Bad request
             "data": None,
             "msg": "Default"
         }
@@ -73,7 +73,7 @@ class Prediction(object):
         #Convertir datos a dataframe
         df = pd.DataFrame(data=res['data'])
         #Predicciones 
-        predictionsTemperature = self.predict(df['temperature'].astype(float), nperiods)
+        predictionsTemperature = self.predict(df.humidity, nperiods)
         #predictionsHumidity = self.predict(df.humidity, nperiods)
         res['data'] = self.get_json(nperiods, predictionsTemperature)
 
