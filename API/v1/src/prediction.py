@@ -11,9 +11,6 @@ from falcon_cors import CORS
 from bson import ObjectId
 from falcon import HTTP_400, HTTP_501, HTTP_404, HTTP_200
 
-
-
-
 #Clase creada para procesar el campo 'data' que será devuelto
 #como parte del 'body' en la respuesta al request realizado.
 class JSONEncoder(json.JSONEncoder):
@@ -83,7 +80,6 @@ class Prediction(object):
         return res
 
     def predict(self, df_column, n_periods_param):
-        df_column = np.split(df_column,24)
         model = pm.auto_arima(df_column, start_p=1, start_q=1, test='adf', max_p=3, max_q=3, m=1, d=None, seasonal=False, start_P=0, D=0,trace=True, error_action='ignore', suppress_warnings=True, stepwise=True)
         # Forecast
         fc, confint = model.predict(n_periods=n_periods_param, return_conf_int=True)
