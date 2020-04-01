@@ -32,19 +32,28 @@ default_args = {
 
 #Inicialización del grafo DAG de tareas para el flujo de trabajo
 dag = DAG(
-    'practica2_prediccion_temp_hum333',
+    'practica2_prediccion_temp_hum_orquest_40',
     default_args=default_args,
     description='Orquestación del servicio de prediccion',
     schedule_interval=timedelta(days=1),
 )
 
 def componerDatos():
+    #Leemos fichero csv
     df_temp = pd.read_csv("/tmp/datos/temperature.csv", sep=",")
     df_hum = pd.read_csv("/tmp/datos/humidity.csv", sep=",")
+    #Seleccionamos datos para San Francisco
     temp = df_temp[['datetime', 'San Francisco']]
     hum = df_hum[['datetime', 'San Francisco']]
+    #Renombramos columnas
+    temp.rename(columns={"San Francisco": "temperature"}, inplace=True)
+    hum.rename(columns={"San Francisco": "humidity"}, inplace=True)
+    #Join de los datos
     data = pd.merge(temp, hum, on='datetime')
-    data.to_csv('/tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/data.csv', index=False, header=True, sep=';', decimal='.')
+    #Eliminamos valores nulos y exportamos a csv
+    data["temperature"].fillna(data["temperature"].mean())
+    data["humidity"].fillna(data["humidity"].mean())
+    data.to_csv('/tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/data.csv', index=False, header=True, sep=',', decimal='.')
     print(data.head(5))
 
 # Operadores o tareas

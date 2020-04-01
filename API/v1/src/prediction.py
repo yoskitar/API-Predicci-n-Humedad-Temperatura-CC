@@ -8,6 +8,11 @@ from falcon_cors import CORS
 from bson import ObjectId
 from falcon import HTTP_400, HTTP_501, HTTP_404
 
+
+hours = ["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00",
+"11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00",
+"23:00"]
+
 #Clase creada para procesar el campo 'data' que será devuelto
 #como parte del 'body' en la respuesta al request realizado.
 class JSONEncoder(json.JSONEncoder):
@@ -70,10 +75,18 @@ class Prediction(object):
         df = pd.DataFrame(data=res['data'])
         #Predicciones 
         predictionsTemperature = self.predict(df.temperature, nperiods)
-        predictionsHumidity = self.predict(df.humidity, nperiods)
-        res['data'] = predictionsTemperature
+        #predictionsHumidity = self.predict(df.humidity, nperiods)
+        res['data'] = get_json(nperiods, predictionsTemperature)
 
         return res
+
+    def get_json(self, n_periods, fc_T):
+        s = '{ "forecast": ['
+        for i in range(n_periods):
+            s += '{"hour" : "'+str(hours[i%24])+'","temp": '+str(fc_T[i])+'}'
+            if i != n_periods-1: s+=","
+        s += ']}'
+        return json.loads(s)
 
     def predict(self, df_column, n_periods_param):
         model = pm.auto_arima(df_column, start_p=1, start_q=1,
