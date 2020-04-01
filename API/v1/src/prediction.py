@@ -77,7 +77,7 @@ class Prediction(object):
         #Convertir datos a dataframe
         df = pd.DataFrame(data=res['data'])
         #Predicciones 
-        predictionsTemperature = self.predict_type(df.iloc[:,2].astype(float), nperiods)
+        predictionsTemperature = self.predict_type(df.iloc[:,2], nperiods)
         #predictionsHumidity = self.predict(df.humidity, nperiods)
         res['data'] = self.get_json(nperiods, predictionsTemperature)
 
