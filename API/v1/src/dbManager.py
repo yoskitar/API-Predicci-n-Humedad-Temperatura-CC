@@ -30,7 +30,7 @@ class DbManager:
         try:
             #Obtener todos los documentos de la colección.
             if(param == 'all'):
-                res = self.collection.find().limit(30000)
+                res = self.collection.find()
         except Exception as ex:
             self.logger.error(ex)
         
