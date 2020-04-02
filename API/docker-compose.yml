@@ -1,21 +1,6 @@
 version: '3.7'
 
 services:
-    v1_service:
-        build:
-            context: ./
-            dockerfile: backend.dockerfile
-        container_name: "v1_service"
-        environment:
-            - PORT=3000
-            - DB_Predictions=mongodb://mongodb_container:27017/
-        ports:
-            - 3000:3000
-        links:
-            - mongodb_container
-        depends_on:
-            - mongodb_container
-    
     mongodb_container:
         build:
             context: ./

@@ -86,7 +86,7 @@ class Prediction(object):
         #Predicciones 
         predictionsTemperature = self.predict(self.model_temp, nperiods)
         predictionsHumidity = self.predict(self.model_humd, nperiods)
-        res['data'] = self.format_json(nperiods, predictionsHumidity, predictionsTemperature)
+        res['data'] = self.format_json(nperiods, predictionsTemperature, predictionsHumidity)
         return res
 
     def predict(self, model, n_periods_param):
