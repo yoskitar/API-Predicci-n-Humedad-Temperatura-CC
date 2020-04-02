@@ -27,4 +27,4 @@ EXPOSE 3000
 #package.json de nuestro microservicio, encargado de 
 #iniciar el microservicio. Esta acción se ejecutará
 #automáticamente al ejecutar el contenedor.
-CMD ["gunicorn","-w", "1", "--timeout", "5000", "-b", ":3000", "--chdir", "src", "app:api"]
+CMD ["gunicorn","-w", "1", "--timeout", "6000", "-b", ":3000", "--chdir", "src", "app:api"]
