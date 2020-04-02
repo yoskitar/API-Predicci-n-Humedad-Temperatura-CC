@@ -11,5 +11,3 @@ services:
             - DB_Predictions=mongodb://mongodb_container:27017/
         ports:
             - 3000:3000
-        links:
-            - mongodb_container
