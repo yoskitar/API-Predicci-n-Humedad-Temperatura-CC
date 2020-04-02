@@ -69,6 +69,7 @@ class Prediction(object):
         res = self.dbManager.get()
         #Convertir datos a dataframe
         df = pd.DataFrame(data=res['data'])
+        logging.warning(df.temperature.values)
         self.model_temp = pm.auto_arima(df.temperature.values, start_p=1, start_q=1, test='adf', max_p=3, max_q=3, m=1, d=None, seasonal=False, start_P=0, D=0,trace=True, error_action='ignore', suppress_warnings=True, stepwise=True)
         self.model_humd = pm.auto_arima(df.humidity.values, start_p=1, start_q=1, test='adf', max_p=3, max_q=3, m=1, d=None, seasonal=False, start_P=0, D=0,trace=True, error_action='ignore', suppress_warnings=True, stepwise=True)
 
