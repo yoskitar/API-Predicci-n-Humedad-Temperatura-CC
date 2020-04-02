@@ -98,7 +98,7 @@ class Prediction(object):
         "23:00"]
         resp_data = []
         for i in range(n_periods):
-            resp_data.append(dict(hour=hours[i%24],temperature=str(fc_temp),humidity=str(fc_humd)))
+            resp_data.append(dict(hour=hours[i%24],temperature=str(fc_temp[i]),humidity=str(fc_humd[i])))
         return resp_data
 
     def post(self, data):
