@@ -18,6 +18,7 @@ dbPredictionsManager = DbManager(os.getenv("DB_Predictions"),'PredictionsDB','pr
 #como parámetro la instancia del manejador de la BD con el objetivo
 #de respetar la 'single source of truth' con la inyección de dependencias.
 predictions = Prediction(dbPredictionsManager)
+predictions.get_models()
 #Definimos la ruta 'receipes', sobre la que se ejecutarán los request
 #definidos en el recurso de la clase 'Receipe' creado.
 api.add_route('/servicio/v1/prediccion', predictions)

@@ -30,6 +30,9 @@ class Prediction(object):
         #Inyección de dependencia
         self.dbManager = dbManager
         cors = CORS(allow_all_origins=True)
+        self.model_temp = None
+        self.model_humd = None
+        
         
     #Método para procesar un petición Get.
     def get(self, method):
@@ -61,6 +64,15 @@ class Prediction(object):
         return res
 
 
+    def get_models(self):
+        #Obtener datos de temperatura y humedad de la BD
+        res = self.dbManager.get()
+        #Convertir datos a dataframe
+        df = pd.DataFrame(data=res['data'])
+        self.model_temp = pm.auto_arima(df.temperature.values, start_p=1, start_q=1, test='adf', max_p=3, max_q=3, m=1, d=None, seasonal=False, start_P=0, D=0,trace=True, error_action='ignore', suppress_warnings=True, stepwise=True)
+        self.model_humd = pm.auto_arima(df.humidity.values, start_p=1, start_q=1, test='adf', max_p=3, max_q=3, m=1, d=None, seasonal=False, start_P=0, D=0,trace=True, error_action='ignore', suppress_warnings=True, stepwise=True)
+
+
     def getPrediction(self, nperiods):
         #Estrutura de respuesta por defecto
         res = {
@@ -68,34 +80,25 @@ class Prediction(object):
             "data": None,
             "msg": "Default"
         }
-        #Obtener datos de temperatura y humedad de la BD
-        res = self.dbManager.get()
-        #Convertir datos a dataframe
-        df = pd.DataFrame(data=res['data'])
         #Predicciones 
-        predictionsTemperature = self.predict(df.temperature.values, nperiods)
-        predictionsHumidity = self.predict(df.humidity.values, nperiods)
-        res['data'] = self.get_json(nperiods, predictionsHumidity, predictionsTemperature)
-
+        predictionsTemperature = predict(self.model_temp, nperiods)
+        predictionsHumidity = predict(self.model_humd, nperiods)
+        res['data'] = self.format_json(nperiods, predictionsHumidity, predictionsTemperature)
         return res
 
-    def predict(self, df_column, n_periods_param):
-        model = pm.auto_arima(df_column, start_p=1, start_q=1, test='adf', max_p=3, max_q=3, m=1, d=None, seasonal=False, start_P=0, D=0,trace=True, error_action='ignore', suppress_warnings=True, stepwise=True)
+    def predict(self, model, n_periods_param):
         # Forecast
         fc, confint = model.predict(n_periods=n_periods_param, return_conf_int=True)
         return fc
 
-    def get_json(self, n_periods, fc_H, fc_T):
+    def format_json(self, n_periods, fc_temp, fc_humd):
         hours = ["00:00","01:00","02:00","03:00","04:00","05:00","06:00","07:00","08:00","09:00","10:00",
         "11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00","21:00","22:00",
         "23:00"]
-
-        s = '{ "forecast": ['
+        resp_data = []
         for i in range(n_periods):
-            s += '{"hour" : "'+str(hours[i%24])+'","temp": '+str(fc_T[i])+',"hum": '+str(fc_H[i])+'}'
-            if i != n_periods-1: s+=","
-        s += ']}'
-        return json.loads(s)
+            resp_data.append(dict(hour=hours[i%24],temperature=str(fc_temp),humidity=str(fc_humd)))
+        return resp_data
 
     def post(self, data):
         #Estrutura de respuesta por defecto
