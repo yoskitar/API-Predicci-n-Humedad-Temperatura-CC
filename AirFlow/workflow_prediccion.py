@@ -32,7 +32,7 @@ default_args = {
 
 #Inicialización del grafo DAG de tareas para el flujo de trabajo
 dag = DAG(
-    'practica2_prediccion_temp_hum_orquest_40',
+    'practica2_prediccion_temp_hum_orquest_1528989',
     default_args=default_args,
     description='Orquestación del servicio de prediccion',
     schedule_interval=timedelta(days=1),
@@ -51,8 +51,7 @@ def componerDatos():
     #Join de los datos
     data = pd.merge(temp, hum, on='datetime')
     #Eliminamos valores nulos y exportamos a csv
-    data["temperature"].fillna(data["temperature"].mean())
-    data["humidity"].fillna(data["humidity"].mean())
+    data = data.dropna()
     data.to_csv('/tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/data.csv', index=False, header=True, sep=',', decimal='.')
     print(data.head(5))
 
@@ -129,5 +128,13 @@ LanzarDBContainer = BashOperator(
     dag=dag,
 )
 
+
+LanzarServices = BashOperator(
+    task_id='LanzarServiceV1',
+    depends_on_past=True,
+    bash_command='export API_KEY_WEATHER_FORECAST=<api_key> && cd /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/ && docker-compose -f docker-compose_services.yml up --build -d',
+    dag=dag,
+)
+
 #Dependencias - Construcción del grafo DAG
-PrepararEntorno >> [DescargaApi,DescargaDatosTemperatura,DescargaDatosHumedad] >> Descomprimir >> ComponerDatos >> LanzarDBContainer
+PrepararEntorno >> [DescargaApi,DescargaDatosTemperatura,DescargaDatosHumedad] >> Descomprimir >> ComponerDatos >> LanzarDBContainer >> LanzarServices

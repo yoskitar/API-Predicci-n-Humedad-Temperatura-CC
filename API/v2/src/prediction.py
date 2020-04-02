@@ -2,9 +2,12 @@
 import falcon
 import json
 import sys
+import logging
+import requests
 from falcon_cors import CORS
 from bson import ObjectId
-from falcon import HTTP_400, HTTP_501, HTTP_404
+from datetime import datetime
+from falcon import HTTP_400, HTTP_501, HTTP_404, HTTP_200
 
 #Clase creada para procesar el campo 'data' que será devuelto
 #como parte del 'body' en la respuesta al request realizado.
@@ -21,56 +24,75 @@ class JSONEncoder(json.JSONEncoder):
 class Prediction(object):
     #Establecemos el manejador de la BD para respetar la
     #'Single source of truth'.
-    def __init__(self, dbManager):
+    def __init__(self, api_key):
         #Inyección de dependencia
-        self.dbManager = dbManager
+        #self.dbManager = dbManager
+        self.api_key = api_key
         cors = CORS(allow_all_origins=True)
         
     #Método para procesar un petición Get.
-    def get(self, method, paramValue):
+    def get(self, method):
         #Estrutura de respuesta por defecto
         res = {
             "status": HTTP_400, #Bad request
-            "data": None,
+            "data": method,
             "msg": "Default"
         }
         #Discriminamos el método indicado como parámetro
         #para realizar el get atendiendo al atributo deseado
         #del documento.
-        if(method == 'all'):
-            res = self.dbManager.get()
-        elif(method == 'byId'):
-            res = self.dbManager.get(param='film_id', value=paramValue)
-        elif(method == 'films'):
-            res = self.dbManager.get(param='films', value=paramValue)
+        n_periods = 1
+        if(method == '24'):
+            n_periods = 8
+        elif(method == '48'):
+            n_periods = 16
+        elif(method == '72'):
+            n_periods = 32
+        elif(method == 'ok'):
+            res['status'] = HTTP_200 
+            res['data'] = 'OK!' 
+            res['msg'] = 'OK'
+            return res
         #Manejar error en cado de llamar a un método no definido
         else:
             res['status'] = HTTP_501 #Método no implementado
             res['msg'] = 'Error: method not implemented'
+            return res
+
+        res = self.getPrediction(n_periods)
         #Devolvemos la respuesta
         return res
+
+    def getPrediction(self, times):
+        #Estrutura de respuesta por defecto
+        res = {
+            "status": HTTP_200, #Ok
+            "data": None,
+            "msg": "Default"
+        }
+        #Predicciones 
+        params = {
+            'appid': self.api_key,
+            'q': 'San Francisco'
+        }
+        api_result = requests.get('http://api.openweathermap.org/data/2.5/forecast', params)
+        api_response = api_result.json()
+        res['data'] = self.format_json(times, api_response['list'])
+        return res
+
+    def format_json(self, n_periods, fc):
+        resp_data = []
+        for i in range(n_periods):
+            resp_data.append(dict(hour=fc[i]['dt_txt'],temperature=str(fc[i]['main']['temp']),humidity=str(fc[i]['main']['humidity'])))
+        return resp_data
 
     def post(self, data):
         #Estrutura de respuesta por defecto
         res = {
-            "status": HTTP_400, #Bad request
+            "status": HTTP_501, #Bad request
             "data": None,
-            "msg": "Default"
+            "msg": "Error: method POST not implemented"
         }
-        #Comprobamos si el json recibido esta bien formado
-        if ('name' in data and 'ingredients' in data):
-            ingredientsValue = data['ingredients']
-            if(isinstance(ingredientsValue,list)):
-                #Creamos un objeto diccionario con la estructura adecuada
-                #para insertarlo como documento en la colección.
-                newReceipe = dict(name=data['name'], ingredients=ingredientsValue)
-                res = self.dbManager.insert(newReceipe)
-            #Gestión de error de tipo incorrecto
-            else:
-                res['msg'] = "Invalid query params type"
-        #Gestión de error de request mal formada
-        else:
-            res['msg'] = "Invalid query params"
         #Devolvemos la respuesta
         return res
 
@@ -78,10 +100,9 @@ class Prediction(object):
     #get sobre el el recurso para el API.
     def on_get(self, req, resp):
         #Obtenemos los parámetros como queryParams en el URL
-        methodParam = req.params['method'] or ""
-        valueParam = req.params['value'] or ""
+        methodParam = req.params['hours'] or ""
         #Procesamos la petición
-        res = self.get(method=methodParam, paramValue=valueParam)
+        res = self.get(method=methodParam)
         #Establecemos la respuesta
         resp.status = res['status']
         resp.body = JSONEncoder().encode(res['data'])

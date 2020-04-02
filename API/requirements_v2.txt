@@ -1,11 +1,8 @@
 falcon
 gunicorn
 pymongo
-numpy
 gevent
 dnspython
 python-dotenv
 falcon_cors
-pmdarima
-pandas
-statsmodels
+requests

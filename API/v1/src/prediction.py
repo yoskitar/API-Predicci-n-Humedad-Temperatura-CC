@@ -54,13 +54,18 @@ class Prediction(object):
             n_periods = 48
         elif(method == '72'):
             n_periods = 72
+        elif(method == 'ok'):
+            res['status'] = HTTP_200 
+            res['data'] = 'OK!' 
+            res['msg'] = 'OK'
+            return res
         #Manejar error en cado de llamar a un método no definido
         else:
             res['status'] = HTTP_501 #Método no implementado
             res['msg'] = 'Error: method not implemented'
             return res
-        
-        res = self.getPrediction(n_periods)
+        if(self.model_humd != None and self.model_temp != None):
+            res = self.getPrediction(n_periods)
         #Devolvemos la respuesta
         return res
 
