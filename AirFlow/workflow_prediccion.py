@@ -59,35 +59,35 @@ def componerDatos():
 PrepararEntorno = BashOperator(
     task_id='PrepararEntorno',
     depends_on_past=False,
-    bash_command='mkdir -p /tmp/datos/',
+    bash_command='mkdir -p /tmp/workflow/datos/',
     dag=dag,
 )
 
 DescargaApi = BashOperator(
     task_id='DescargaApi',
     depends_on_past=True,
-    bash_command='wget -O /tmp/master.zip https://github.com/yoskitar/API-Prediccion-Humedad-Temperatura-CC/archive/master.zip',
+    bash_command='wget -O /tmp/workflow/master.zip https://github.com/yoskitar/API-Prediccion-Humedad-Temperatura-CC/archive/master.zip',
     dag=dag,
 )
 
 DescargaDatosHumedad = BashOperator(
     task_id='DescargaHumedad',
     depends_on_past=True,
-    bash_command='wget -O /tmp/datos/humidity.csv.zip https://github.com/manuparra/MaterialCC2020/raw/master/humidity.csv.zip',
+    bash_command='wget -O /tmp/workflow/datos/humidity.csv.zip https://github.com/manuparra/MaterialCC2020/raw/master/humidity.csv.zip',
     dag=dag,
 )
 
 DescargaDatosTemperatura = BashOperator(
     task_id='DescargaTemperatura',
     depends_on_past=True,
-    bash_command='wget -O /tmp/datos/temperature.csv.zip https://github.com/manuparra/MaterialCC2020/raw/master/temperature.csv.zip',
+    bash_command='wget -O /tmp/workflow/datos/temperature.csv.zip https://github.com/manuparra/MaterialCC2020/raw/master/temperature.csv.zip',
     dag=dag,
 )
 
 Descomprimir = BashOperator(
     task_id='Descomprimir',
     depends_on_past=True,
-    bash_command='unzip -o /tmp/master.zip -d /tmp & unzip -o /tmp/datos/temperature.csv.zip -d /tmp/datos & unzip -o /tmp/datos/humidity.csv.zip -d /tmp/datos',
+    bash_command='unzip -o /tmp/workflow/master.zip -d /tmp/workflow & unzip -o /tmp/datos/temperature.csv.zip -d /tmp/workflow/datos & unzip -o /tmp/workflow/datos/humidity.csv.zip -d /tmp/workflow/datos',
     dag=dag,
 )
 
@@ -124,28 +124,28 @@ IntegrarDatosDB = BashOperator(
 LanzarDBContainer = BashOperator(
     task_id='LanzarDBContainer',
     depends_on_past=True,
-    bash_command='cd /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/ && docker-compose up --build -d',
+    bash_command='cd /tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/ && docker-compose up --build -d',
     dag=dag,
 )
 
 TestServiceV1 = BashOperator(
     task_id='TestServiceV1',
     depends_on_past=True,
-    bash_command='pip install -r /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/requirements.txt && cd /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/v1/ && coverage run -m unittest src/test/app_test.py',
+    bash_command='pip install -r /tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/requirements.txt && cd /tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/v1/ && coverage run -m unittest src/test/app_test.py',
     dag=dag,
 )
 
 TestServiceV2 = BashOperator(
     task_id='TestServiceV2',
     depends_on_past=True,
-    bash_command='pip install -r /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/requirements_v2.txt && export API_KEY_WEATHER_FORECAST=ce3321443f7a4792d26fa1c414e7463a && cd /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/v2/ && coverage run -m unittest src/test/app_test.py',
+    bash_command='pip install -r /tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/requirements_v2.txt && export API_KEY_WEATHER_FORECAST=<api-key> && cd /tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/v2/ && coverage run -m unittest src/test/app_test.py',
     dag=dag,
 )
 
 LanzarServices = BashOperator(
     task_id='LanzarServices',
     depends_on_past=True,
-    bash_command='export API_KEY_WEATHER_FORECAST=ce3321443f7a4792d26fa1c414e7463a && cd /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/ && docker-compose -f docker-compose_services.yml up --build -d',
+    bash_command='export API_KEY_WEATHER_FORECAST=<api-key> && cd /tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/ && docker-compose -f docker-compose_services.yml up --build -d',
     dag=dag,
 )
 
