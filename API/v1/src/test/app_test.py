@@ -18,12 +18,12 @@ class Tester(testing.TestCase):
 class TestApp(Tester):
     #Función para testear que la ruta está disponible
     def test_get_ok(self):
-        result = self.simulate_get('/services/v1/predictions?hours=ok')
+        result = self.simulate_get('/servicio/v1/prediccion?hours=ok')
         self.assertEqual(result.status, HTTP_200)
 
     #Función para testear la llamada de un método no definido sobre el recurso get
     def test_get_notDefined(self):
-        result = self.simulate_get('/services/v1/predictions?hours=20')
+        result = self.simulate_get('/servicio/v1/prediccion?hours=20')
         self.assertEqual(result.status, HTTP_501)
 
     
