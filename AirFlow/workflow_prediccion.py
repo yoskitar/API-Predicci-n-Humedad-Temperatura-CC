@@ -84,10 +84,22 @@ DescargaDatosTemperatura = BashOperator(
     dag=dag,
 )
 
+'''
+Segunda opción de cara a mejorar la eficiencia, paralelizando el 
+proceso de descompresión de cada .zip descargado
+
+DescargaDatosYDescomprime = BashOperator(
+    task_id='DescargaTemperatura',
+    depends_on_past=True,
+    bash_command='wget -O /tmp/workflow/datos/temperature.csv.zip https://github.com/manuparra/MaterialCC2020/raw/master/temperature.csv.zip && unzip -o /tmp/workflow/datos/temperature.csv.zip -d /tmp/workflow/datos',
+    dag=dag,
+)
+'''
+
 Descomprimir = BashOperator(
     task_id='Descomprimir',
     depends_on_past=True,
-    bash_command='unzip -o /tmp/workflow/master.zip -d /tmp/workflow & unzip -o /tmp/datos/temperature.csv.zip -d /tmp/workflow/datos & unzip -o /tmp/workflow/datos/humidity.csv.zip -d /tmp/workflow/datos',
+    bash_command='unzip -o /tmp/workflow/master.zip -d /tmp/workflow & unzip -o /tmp/workflow/datos/temperature.csv.zip -d /tmp/workflow/datos & unzip -o /tmp/workflow/datos/humidity.csv.zip -d /tmp/workflow/datos',
     dag=dag,
 )
 
