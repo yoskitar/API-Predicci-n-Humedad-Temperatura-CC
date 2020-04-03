@@ -32,7 +32,7 @@ default_args = {
 
 #Inicialización del grafo DAG de tareas para el flujo de trabajo
 dag = DAG(
-    'practica2_prediccion_temp_hum_orquest_1528989',
+    'practica2_forecast',
     default_args=default_args,
     description='Orquestación del servicio de prediccion',
     schedule_interval=timedelta(days=1),
@@ -128,13 +128,26 @@ LanzarDBContainer = BashOperator(
     dag=dag,
 )
 
+TestServiceV1 = BashOperator(
+    task_id='TestServiceV1',
+    depends_on_past=True,
+    bash_command='pip install -r /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/requirements.txt && cd /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/v1/ && coverage run -m unittest src/test/app_test.py',
+    dag=dag,
+)
+
+TestServiceV2 = BashOperator(
+    task_id='TestServiceV2',
+    depends_on_past=True,
+    bash_command='pip install -r /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/requirements_v2.txt && export API_KEY_WEATHER_FORECAST=ce3321443f7a4792d26fa1c414e7463a && cd /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/v2/ && coverage run -m unittest src/test/app_test.py',
+    dag=dag,
+)
 
 LanzarServices = BashOperator(
-    task_id='LanzarServiceV1',
+    task_id='LanzarServices',
     depends_on_past=True,
-    bash_command='export API_KEY_WEATHER_FORECAST=<api_key> && cd /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/ && docker-compose -f docker-compose_services.yml up --build -d',
+    bash_command='export API_KEY_WEATHER_FORECAST=ce3321443f7a4792d26fa1c414e7463a && cd /tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/ && docker-compose -f docker-compose_services.yml up --build -d',
     dag=dag,
 )
 
 #Dependencias - Construcción del grafo DAG
-PrepararEntorno >> [DescargaApi,DescargaDatosTemperatura,DescargaDatosHumedad] >> Descomprimir >> ComponerDatos >> LanzarDBContainer >> LanzarServices
+PrepararEntorno >> [DescargaApi,DescargaDatosTemperatura,DescargaDatosHumedad] >> Descomprimir >> ComponerDatos >> LanzarDBContainer >> [TestServiceV1,TestServiceV2] >> LanzarServices
