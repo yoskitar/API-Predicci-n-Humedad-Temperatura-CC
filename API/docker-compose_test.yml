@@ -1,0 +1,24 @@
+version: '3.7'
+
+services:
+    v1_service_test:
+        build:
+            context: ./
+            dockerfile: service_v1_test.dockerfile
+        container_name: "v1_service_test"
+        environment:
+            - PORT=3000
+            - DB_Predictions=mongodb://mongodb_container:27017/
+        ports:
+            - 3000:3000
+
+    v2_service_test:
+        build:
+            context: ./
+            dockerfile: service_v2_test.dockerfile
+        container_name: "v2_service_test"
+        environment:
+            - PORT=3001
+            - API_KEY=${API_KEY_WEATHER_FORECAST}
+        ports:
+            - 3001:3001

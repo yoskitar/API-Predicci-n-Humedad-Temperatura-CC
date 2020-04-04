@@ -59,7 +59,7 @@ def componerDatos():
 PrepararEntorno = BashOperator(
     task_id='PrepararEntorno',
     depends_on_past=False,
-    bash_command='mkdir -p /tmp/workflow/datos/',
+    bash_command='mkdir -p /tmp/workflow/datos/ && export API_KEY_WEATHER_FORECAST=<api-key>',
     dag=dag,
 )
 
@@ -140,6 +140,7 @@ LanzarDBContainer = BashOperator(
     dag=dag,
 )
 
+'''
 TestServiceV1 = BashOperator(
     task_id='TestServiceV1',
     depends_on_past=True,
@@ -153,13 +154,21 @@ TestServiceV2 = BashOperator(
     bash_command='pip install -r /tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/requirements_v2.txt && export API_KEY_WEATHER_FORECAST=<api-key> && cd /tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/v2/ && coverage run -m unittest src/test/app_test.py',
     dag=dag,
 )
+'''
+
+TestServices = BashOperator(
+    task_id='TestServices',
+    depends_on_past=True,
+    bash_command='cd /tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/ && docker-compose -f docker-compose_test.yml up --build -d',
+    dag=dag,
+)
 
 LanzarServices = BashOperator(
     task_id='LanzarServices',
     depends_on_past=True,
-    bash_command='export API_KEY_WEATHER_FORECAST=<api-key> && cd /tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/ && docker-compose -f docker-compose_services.yml up --build -d',
+    bash_command='cd /tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/ && docker-compose -f docker-compose_services.yml up --build -d',
     dag=dag,
 )
 
 #Dependencias - Construcción del grafo DAG
-PrepararEntorno >> [DescargaApi,DescargaDatosTemperatura,DescargaDatosHumedad] >> Descomprimir >> ComponerDatos >> LanzarDBContainer >> [TestServiceV1,TestServiceV2] >> LanzarServices
+PrepararEntorno >> [DescargaApi,DescargaDatosTemperatura,DescargaDatosHumedad] >> Descomprimir >> ComponerDatos >> LanzarDBContainer >> TestServices >> LanzarServices
