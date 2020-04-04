@@ -9,3 +9,4 @@ falcon_cors
 pmdarima
 pandas
 statsmodels
+coverage

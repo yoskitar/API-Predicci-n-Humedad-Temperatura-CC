@@ -40,8 +40,8 @@ dag = DAG(
 
 def componerDatos():
     #Leemos fichero csv
-    df_temp = pd.read_csv("/tmp/datos/temperature.csv", sep=",")
-    df_hum = pd.read_csv("/tmp/datos/humidity.csv", sep=",")
+    df_temp = pd.read_csv("/tmp/workflow/datos/temperature.csv", sep=",")
+    df_hum = pd.read_csv("/tmp/workflow/datos/humidity.csv", sep=",")
     #Seleccionamos datos para San Francisco
     temp = df_temp[['datetime', 'San Francisco']]
     hum = df_hum[['datetime', 'San Francisco']]
@@ -52,14 +52,14 @@ def componerDatos():
     data = pd.merge(temp, hum, on='datetime')
     #Eliminamos valores nulos y exportamos a csv
     data = data.dropna()
-    data.to_csv('/tmp/API-Prediccion-Humedad-Temperatura-CC-master/API/data.csv', index=False, header=True, sep=',', decimal='.')
+    data.to_csv('/tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/data.csv', index=False, header=True, sep=',', decimal='.')
     print(data.head(5))
 
 # Operadores o tareas
 PrepararEntorno = BashOperator(
     task_id='PrepararEntorno',
     depends_on_past=False,
-    bash_command='mkdir -p /tmp/workflow/datos/ && export API_KEY_WEATHER_FORECAST=<api-key>',
+    bash_command='mkdir -p /tmp/workflow/datos/ & export API_KEY_WEATHER_FORECAST=d09d9439b4c3beded4c971e5c39c755e',
     dag=dag,
 )
 
