@@ -32,7 +32,7 @@ default_args = {
 
 #Inicialización del grafo DAG de tareas para el flujo de trabajo
 dag = DAG(
-    'practica2_forecast',
+    'practica2_forecast_3',
     default_args=default_args,
     description='Orquestación del servicio de prediccion',
     schedule_interval=timedelta(days=1),
@@ -140,7 +140,7 @@ LanzarDBContainer = BashOperator(
     dag=dag,
 )
 
-'''
+
 TestServiceV1 = BashOperator(
     task_id='TestServiceV1',
     depends_on_past=True,
@@ -151,17 +151,18 @@ TestServiceV1 = BashOperator(
 TestServiceV2 = BashOperator(
     task_id='TestServiceV2',
     depends_on_past=True,
-    bash_command='pip install -r /tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/requirements_v2.txt && export API_KEY_WEATHER_FORECAST=<api-key> && cd /tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/v2/ && coverage run -m unittest src/test/app_test.py',
+    bash_command='pip install -r /tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/requirements_v2.txt && cd /tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/v2/ && coverage run -m unittest src/test/app_test.py',
     dag=dag,
 )
-'''
 
+'''
 TestServices = BashOperator(
     task_id='TestServices',
     depends_on_past=True,
     bash_command='cd /tmp/workflow/API-Prediccion-Humedad-Temperatura-CC-master/API/ && docker-compose -f docker-compose_test.yml up --build -d',
     dag=dag,
 )
+'''
 
 LanzarServices = BashOperator(
     task_id='LanzarServices',
@@ -171,4 +172,4 @@ LanzarServices = BashOperator(
 )
 
 #Dependencias - Construcción del grafo DAG
-PrepararEntorno >> [DescargaApi,DescargaDatosTemperatura,DescargaDatosHumedad] >> Descomprimir >> ComponerDatos >> LanzarDBContainer >> TestServices >> LanzarServices
+PrepararEntorno >> [DescargaApi,DescargaDatosTemperatura,DescargaDatosHumedad] >> Descomprimir >> ComponerDatos >> LanzarDBContainer >> [TestServiceV1,TestServiceV2] >> LanzarServices
