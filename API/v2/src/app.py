@@ -14,7 +14,6 @@ load_dotenv()
 #Creamos una instancia del manejador de la base de datos, para
 #la BD y colección indicadas como parámetros.
 API_KEY = os.getenv("API_KEY")
-logging.warning(API_KEY)
 #dbPredictionsManager = DbManager(os.getenv("DB_Predictions"),'PredictionsDB','predictions_v2')
 #Creamos la instancia del recurso para la gestión de recetas, pasándole
 #como parámetro la instancia del manejador de la BD con el objetivo

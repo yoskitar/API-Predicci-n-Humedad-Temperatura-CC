@@ -77,7 +77,6 @@ class Prediction(object):
         }
         api_result = requests.get('http://api.openweathermap.org/data/2.5/forecast', params)
         api_response = api_result.json()
-        logging.warning(self.api_key)
         logging.warning(api_response)
         res['data'] = self.format_json(times, api_response['list'])
         return res
